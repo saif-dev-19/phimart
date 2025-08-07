@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from decimal import Decimal
-from product.models import Category,Product,Review
+from product.models import Category,Product,Review,ProductImage
 from django.contrib.auth import get_user_model
 
 
@@ -15,7 +15,7 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id','name','description','product_count']
     
-    product_count = serializers.IntegerField(read_only = True)
+    product_count = serializers.IntegerField(read_only = True, help_text = "Return the number product in this category")
 
 # class ProductSerializer(serializers.Serializer):
 #     id = serializers.IntegerField()
@@ -34,10 +34,18 @@ class CategorySerializer(serializers.ModelSerializer):
 #     def calculate_tax(self,product):
 #         return round(product.price * Decimal(1.1))
 
+
+
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ['id','image']
+
 class ProductSerializer(serializers.ModelSerializer):
+    images = ProductImageSerializer(many = True, read_only = True)
     class Meta:
         model = Product
-        fields = ['id','name','description','price','stock','category','price_with_tax']
+        fields = ['id','name','images','description','price','stock','category','price_with_tax']
 
 
     price_with_tax = serializers.SerializerMethodField(method_name='calculate_tax')
@@ -61,6 +69,9 @@ class SimpleUserSerializer(serializers.ModelSerializer):
 
     def get_current_user_name(self,obj):
         return obj.get_full_name()
+
+
+
 
 
 

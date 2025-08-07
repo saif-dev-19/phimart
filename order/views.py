@@ -19,6 +19,8 @@ class CartViewSet(CreateModelMixin,RetrieveModelMixin,DestroyModelMixin,GenericV
         serializer.save(user = self.request.user)
 
     def get_queryset(self):
+        if getattr(self,'swagger_fake_view',False):
+            return Cart.objects.none()
         return Cart.objects.prefetch_related('items__product').filter(user = self.request.user) #jar cart sudu sei dekhte parbe tai use korce ei def
 
 
@@ -33,10 +35,14 @@ class CartItemViewSet(ModelViewSet):
         return CartItemsSerializer
     
     def get_serializer_context(self):
-        return {'cart_id': self.kwargs['cart_pk']}
+        context = super().get_serializer_context()
+        if getattr(self, 'swagger_fake_view', False):
+            return context
+        
+        return {'cart_id': self.kwargs.get('cart_pk')}
 
     def get_queryset(self):
-        return CartItem.objects.select_related('product').filter(cart_id = self.kwargs['cart_pk'])
+        return CartItem.objects.select_related('product').filter(cart_id = self.kwargs.get('cart_pk'))
 
 
 class OrderViewSet(ModelViewSet):
@@ -75,9 +81,13 @@ class OrderViewSet(ModelViewSet):
         return OrderSerializer
 
     def get_serializer_context(self):
+        if getattr(self,'swagger_fake_view',False):
+            return super().get_serializer_context()
         return {'user_id' : self.request.user.id, 'user' : self.request.user}
 
     def get_queryset(self):
+        if getattr(self,'swagger_fake_view',False):
+            return Order.objects.none
         if self.request.user.is_staff:
             return Order.objects.prefetch_related('items__product').all() # prefatch_related karon order er modde product nai, product ache orderItem er modde tai order theke items then product ke access
         return Order.objects.prefetch_related('items__product').filter(user = self.request.user)

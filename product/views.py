@@ -2,9 +2,9 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from product.models import Product,Category,Review
+from product.models import Product,Category,Review,ProductImage
 from rest_framework import status
-from product.serializers import ProductSerializer,CategorySerializer,ReviewSerializer
+from product.serializers import ProductSerializer,CategorySerializer,ReviewSerializer,ProductImageSerializer
 from django.db.models import Count
 from rest_framework.views import APIView
 from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView
@@ -17,11 +17,20 @@ from product.pagination import DefaultPagination
 from api.permission import IsAdminOrReadOnly,FullDjangoModelPermission
 from rest_framework.permissions import DjangoModelPermissions
 from product.permissions import IsReviewAurthorOrReadOnly
+from drf_yasg.utils import swagger_auto_schema
+
 
 
 # Create your views here.
 
 class ProductViewSet(ModelViewSet):
+     """
+     API endpoint for managing products in the e-commerce store
+     - Allow authenticated admin to create,update,and delete products
+     - Allows user to browse and filter product
+     - Support searching by name, description, and category
+     - Support ordering by price and updated-at
+     """
      queryset = Product.objects.all()
      serializer_class = ProductSerializer
      filter_backends= [DjangoFilterBackend,SearchFilter,OrderingFilter]
@@ -49,14 +58,42 @@ class ProductViewSet(ModelViewSet):
      #           queryset = Product.objects.filter(category_id = category_id)
      #      return queryset
      
-     def destroy(self, request, *args, **kwargs):
-          product = self.get_object()
-          if product.stock > 10:
-               return Response({"message":"Product with stock more then 10 could not be deleted"})
-          self.perform_destroy(product)
-          return Response(status= status.HTTP_204_NO_CONTENT)
+     # def destroy(self, request, *args, **kwargs):
+     #      product = self.get_object()
+     #      if product.stock > 10:
+     #           return Response({"message":"Product with stock more then 10 could not be deleted"})
+     #      self.perform_destroy(product)
+     #      return Response(status= status.HTTP_204_NO_CONTENT)
+
+     @swagger_auto_schema(
+               operation_summary= "Retrive a list of product"
+     )
+     def list(self, request, *args, **kwargs):
+          """Retrive all the products"""
+          return super().list(request, *args, **kwargs)
+     
+     @swagger_auto_schema(
+               operation_summary= "Create a product by admin",
+               operation_description= "This allow an admin to create a project",
+               responses={
+                    201:ProductSerializer,
+                    400 : "Bed Request"
+               }
+     )
+     def create(self, request, *args, **kwargs):
+          """Only Authenticated Admin can create product"""
+          return super().create(request, *args, **kwargs)
+     
 
 
+class ProductImageViews(viewsets.ModelViewSet):
+     serializer_class = ProductImageSerializer
+     permission_classes = [IsAdminOrReadOnly]
+     def get_queryset(self):
+          return ProductImage.objects.filter(product_id = self.kwargs.get('product_pk'))
+     
+     def perform_create(self, serializer):
+          serializer.save(product_id = self.kwargs.get('product_pk'))
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -74,10 +111,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
           serializer.save(user = self.request.user) #eta r serailizer er product id er jonno def create 2 tai same kaj kore, easy way eta. context patano
      
      def get_queryset(self):
-          return Review.objects.filter(product_id = self.kwargs['product_pk'])
+          return Review.objects.filter(product_id = self.kwargs.get('product_pk'))
      
      def get_serializer_context(self):
-          return {'product_id':self.kwargs['product_pk']}
+          return {'product_id':self.kwargs.get('product_pk')}
      
 
 

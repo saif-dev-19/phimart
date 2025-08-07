@@ -31,7 +31,6 @@ class ProductViewSet(ModelViewSet):
      - Support searching by name, description, and category
      - Support ordering by price and updated-at
      """
-     queryset = Product.objects.all()
      serializer_class = ProductSerializer
      filter_backends= [DjangoFilterBackend,SearchFilter,OrderingFilter]
      pagination_class = DefaultPagination
@@ -64,6 +63,9 @@ class ProductViewSet(ModelViewSet):
      #           return Response({"message":"Product with stock more then 10 could not be deleted"})
      #      self.perform_destroy(product)
      #      return Response(status= status.HTTP_204_NO_CONTENT)
+
+     def get_queryset(self):
+          return Product.objects.prefetch_related('images').all()
 
      @swagger_auto_schema(
                operation_summary= "Retrive a list of product"

@@ -20,7 +20,7 @@ Phimart is a RESTful e-commerce API built using Django REST Framework (DRF). It 
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/phimart.git
+   git clone https://github.com/saif-dev-19/phimart.git
    cd phimart
    ```
 
@@ -76,4 +76,4 @@ This project is licensed under the MIT License.
 
 ---
 ### Author
-[Mahfuzur Rahman Saif](https://github.com/yourusername)
+[Mahfuzur Rahman Saif](https://github.com/saif-dev-19)

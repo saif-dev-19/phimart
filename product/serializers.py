@@ -67,7 +67,6 @@ class SimpleUserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ['id','name']
 
-
     def get_current_user_name(self,obj):
         return obj.get_full_name()
 
@@ -79,14 +78,14 @@ class SimpleUserSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     # user = serializers.CharField(read_only = True)
     # user = SimpleUserSerializer()
-    user = serializers.SerializerMethodField(method_name='get_user')#nested serializer line 76
+    user = serializers.SerializerMethodField(method_name='get_user')#nested serializer line 76 , direct serilizer diye likhle required  field mone kore, tai nested kore nite hoy
     class Meta:
         model = Review
         fields = ['id','user','product','ratings','comment']
         read_only_fields = ['user','product'] #upoer user er moto koreo read only kora jabe  caile
 
     def get_user(self,obj):
-        return SimpleUserSerializer(obj.user).data #nested serializer line 70
+        return SimpleUserSerializer(obj.user).data #nested serializer line 70, user er data niyeci
 
     def create(self, validated_data):
         product_id = self.context['product_id']

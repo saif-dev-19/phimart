@@ -64,8 +64,6 @@ class OrderViewSet(ModelViewSet):
         return Response({'status':f'Order Status updated to {request.data['status']}'})
         
 
-
-
     def get_permissions(self):
         if self.action in ['update_status','destroy']:
             return [IsAdminUser()]

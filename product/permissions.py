@@ -1,8 +1,8 @@
 from rest_framework import permissions
 
 
-class IsReviewAurthorOrReadOnly(permissions.BasePermission): #View lavel permission, view k k korte parbe
-    def has_permission(self, request, view):
+class IsReviewAurthorOrReadOnly(permissions.BasePermission): 
+    def has_permission(self, request, view):#View lavel permission, view k k korte parbe
         if request.method in permissions.SAFE_METHODS:
             return True
         return request.user and request.user.is_authenticated

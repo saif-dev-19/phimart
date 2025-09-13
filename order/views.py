@@ -9,6 +9,9 @@ from rest_framework.decorators import action
 from order.services import OrderServices
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.views import APIView
+from sslcommerz_lib import SSLCOMMERZ
 # Create your views here.
 
 
@@ -99,3 +102,47 @@ class OrderViewSet(ModelViewSet):
             return Order.objects.prefetch_related('items__product').all() # prefatch_related karon order er modde product nai, product ache orderItem er modde tai order theke items then product ke access
         return Order.objects.prefetch_related('items__product').filter(user = self.request.user)
     
+
+class HasOrderProduct(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self,request,product_id):
+        user = request.user
+        has_odered = OrderItem.objects.filter(order__user = user, product_id = product_id).exists()
+        return Response({"hasOrdered" : has_odered})
+
+
+
+
+@api_view(['POST'])
+def initiate_payment(request): 
+    settings = { 'store_id': 'phima68c3974e511d5', 'store_pass': 'phima68c3974e511d5@ssl', 'issandbox': True }
+    sslcz = SSLCOMMERZ(settings)
+    post_body = {}
+    post_body['total_amount'] = 100.26
+    post_body['currency'] = "BDT"
+    post_body['tran_id'] = "12345"
+    post_body['success_url'] = "your success url"
+    post_body['fail_url'] = "your fail url"
+    post_body['cancel_url'] = "your cancel url"
+    post_body['emi_option'] = 0
+    post_body['cus_name'] = "test"
+    post_body['cus_email'] = "test@test.com"
+    post_body['cus_phone'] = "01700000000"
+    post_body['cus_add1'] = "customer address"
+    post_body['cus_city'] = "Dhaka"
+    post_body['cus_country'] = "Bangladesh"
+    post_body['shipping_method'] = "NO"
+    post_body['multi_card_name'] = ""
+    post_body['num_of_item'] = 1
+    post_body['product_name'] = "Test"
+    post_body['product_category'] = "Test Category"
+    post_body['product_profile'] = "general"
+
+
+    response = sslcz.createSession(post_body)
+    print(response)
+
+    if response.get("status") == 'SUCCESS':
+        return Response({"Payment Url":response['GatewayPageURL']})
+    return response({"error":"Payment initiation failed"},status=status.HTTP_400_BAD_REQUEST)
